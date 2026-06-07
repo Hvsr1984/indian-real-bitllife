@@ -146,7 +146,7 @@ export const Dashboard: React.FC = () => {
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={ageUp}
-            className="fixed bottom-20 right-4 lg:relative lg:bottom-0 lg:right-0 w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-luxury-goldGlow border-2 border-luxury-goldText flex flex-col items-center justify-center gap-1 shadow-[0_0_25px_rgba(212,175,55,0.25)] hover:shadow-[0_0_35px_rgba(212,175,55,0.45)] hover:scale-105 transition-all text-gold-400 select-none group cursor-pointer z-40"
+            className="fixed bottom-24 right-4 lg:relative lg:bottom-0 lg:right-0 w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-luxury-card lg:bg-luxury-goldGlow border-2 border-luxury-goldText flex flex-col items-center justify-center gap-1 shadow-[0_4px_20px_rgba(212,175,55,0.25)] hover:shadow-[0_6px_30px_rgba(212,175,55,0.45)] hover:scale-105 transition-all text-gold-400 select-none group cursor-pointer z-45"
           >
             <span className="text-[10px] uppercase font-bold tracking-widest group-hover:text-gold-200 transition">Age Up</span>
             <span className="text-sm font-black text-gold-400 group-hover:scale-110 transition-transform">Age {player.age + 1}</span>
@@ -155,7 +155,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Bottom Dock Navigation Tabs */}
-        <nav className="w-full sticky bottom-0 z-30 glass-card bg-opacity-90 rounded-2xl py-2 px-3 border border-luxury-border flex justify-between items-center shadow-lg gap-1 md:gap-2">
+        <nav className="fixed bottom-0 left-0 right-0 z-30 glass-card bg-luxury-card bg-opacity-95 rounded-t-2xl rounded-b-none border-t border-x-0 border-b-0 py-2 px-3 flex justify-between items-center shadow-2xl gap-1 md:gap-2 lg:relative lg:bottom-auto lg:left-auto lg:right-auto lg:z-10 lg:rounded-2xl lg:border lg:py-2 lg:px-3 lg:shadow-lg lg:bg-opacity-90 lg:m-0">
           {[
             { id: 'occupation', label: 'Work', icon: <Briefcase size={15} /> },
             { id: 'relationships', label: 'Family', icon: <Users size={15} /> },
