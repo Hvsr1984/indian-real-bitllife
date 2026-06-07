@@ -414,6 +414,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
         updatedPlayer.education.prepCoaching = coachingType;
         updatedPlayer.biography.push(`✏️ Coaching Loan: Borrowed ${formatCurrency(fee)} from parents to enroll in ${coachingType}.`);
         updatedPlayer.stats.happiness = Math.min(100, updatedPlayer.stats.happiness + 5);
+      } else if (trig.startsWith('borrowBankCoaching_')) {
+        const coachingType = trig.replace('borrowBankCoaching_', '') as any;
+        let fee = 100000;
+        if (coachingType === 'UPSC Prep') fee = 150000;
+        if (coachingType === 'JEE Prep' || coachingType === 'NEET Prep') fee = 120000;
+
+        updatedPlayer.stats.money -= fee;
+        updatedPlayer.education.prepCoaching = coachingType;
+        updatedPlayer.biography.push(`🏦 Education Loan: Borrowed ${formatCurrency(fee)} from SBI at 8.5% interest to enroll in ${coachingType} coaching.`);
+        updatedPlayer.stats.happiness = Math.min(100, updatedPlayer.stats.happiness + 5);
       } else if (trig === 'chooseCommerce') {
         updatedPlayer.education.stream = 'Commerce';
       } else if (trig === 'chooseArts') {
@@ -1048,7 +1058,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (currentAge < 12) {
         event = randomSelect(CHILDHOOD_EVENTS);
       } else if (currentAge < 18) {
-        event = randomSelect(SCHOOL_EVENTS);
+        const availableSchoolEvents = SCHOOL_EVENTS.filter(
+          (e) => e.id !== 'stream_selection' || !updatedPlayer.education.stream
+        );
+        event = randomSelect(availableSchoolEvents);
       } else {
         event = randomSelect(ADULT_EVENTS);
       }
@@ -1119,11 +1132,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
       } else {
         set({
           activeEvent: {
-            id: 'insufficient_funds_coaching',
-            title: 'Coaching Fees Too High',
-            description: `Enrollment in Kota or Delhi coaching requires ${formatCurrency(fee)}. You don't have enough money.`,
-            emoji: '❌',
-            options: [{ text: 'Bummer', effects: { logText: 'You couldn\'t afford coaching classes.' } }]
+            id: 'insufficient_funds_coaching_loan',
+            title: 'Request Bank Education Loan?',
+            description: `Enrollment in ${type} coaching requires ${formatCurrency(fee)}. You don't have enough money. Will you take out an SBI Education Loan to cover the fee?`,
+            emoji: '🏦',
+            options: [
+              {
+                text: 'Take out SBI Education Loan',
+                effects: {
+                  logText: `Took out an SBI Education Loan to pay for ${type} coaching.`,
+                  customTrigger: `borrowBankCoaching_${type}`
+                }
+              },
+              {
+                text: 'Never mind',
+                effects: {
+                  logText: 'Decided not to enroll in coaching.'
+                }
+              }
+            ]
           }
         });
       }
