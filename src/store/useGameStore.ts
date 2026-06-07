@@ -24,6 +24,7 @@ export interface GameStore {
   // Education & Career Actions
   studyHard: () => void;
   enrollCoaching: (type: 'JEE Prep' | 'NEET Prep' | 'UPSC Prep' | 'NDA Prep' | 'CAT Prep' | 'CA Prep') => void;
+  takeCompetitiveExam: (type: 'JEE' | 'NEET' | 'NDA' | 'UPSC') => void;
   applyJob: (pathKey: string) => boolean;
   workHard: () => void;
   resignJob: () => void;
@@ -303,7 +304,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       education: {
         stage: 'Infant',
         studyEffort: 50,
-        scholarship: false
+        scholarship: false,
+        examsPassed: []
       },
       career: { type: 'None', name: 'None', levelIndex: 0, salary: 0 },
       relationships,
@@ -416,6 +418,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
         updatedPlayer.education.stream = 'Commerce';
       } else if (trig === 'chooseArts') {
         updatedPlayer.education.stream = 'Arts';
+      } else if (trig === 'triggerJEE') {
+        setTimeout(() => {
+          set({ activeEvent: COMPETITIVE_EXAM_EVENTS.JEE });
+        }, 100);
+      } else if (trig === 'triggerNEET') {
+        setTimeout(() => {
+          set({ activeEvent: COMPETITIVE_EXAM_EVENTS.NEET });
+        }, 100);
+      } else if (trig === 'triggerNDA') {
+        setTimeout(() => {
+          set({ activeEvent: COMPETITIVE_EXAM_EVENTS.NDA });
+        }, 100);
+      } else if (trig === 'skipExamsDirectAdmission') {
+        updatedPlayer.education.stage = 'College';
+        updatedPlayer.education.currentDegree = updatedPlayer.education.stream === 'Commerce' ? 'BCom Finance' : updatedPlayer.education.stream === 'Arts' ? 'BA History' : 'BSc General';
+        updatedPlayer.biography.push(`🎓 Enrolled in Delhi University for ${updatedPlayer.education.currentDegree}.`);
       } else if (trig === 'solveJEENormal' || trig === 'solveNEETNormal') {
         // Exam Resolution!
         const effort = updatedPlayer.education.studyEffort;
@@ -431,6 +449,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
         const score = (intel * 0.4) + (effort * 0.3) + prepBoost + (isGenius ? 20 : 0) + (isDisciplined ? 10 : 0) - (isLazy ? 20 : 0) + randomRange(-10, 10);
         
+        if (!updatedPlayer.education.examsPassed) {
+          updatedPlayer.education.examsPassed = [];
+        }
+
         if (score >= 70) {
           // Passed!
           const degree = trig === 'solveJEENormal' ? 'IIT BTech Engineering' : 'AIIMS MBBS Medicine';
@@ -442,32 +464,80 @@ export const useGameStore = create<GameStore>((set, get) => ({
           updatedPlayer.stats.reputation = Math.min(100, updatedPlayer.stats.reputation + 25);
           
           if (trig === 'solveJEENormal') {
+            if (!updatedPlayer.education.examsPassed.includes('JEE')) {
+              updatedPlayer.education.examsPassed.push('JEE');
+            }
             setTimeout(() => get().unlockAchievement('IITGrad'), 100);
             setTimeout(() => get().unlockAchievement('KotaSurvivor'), 150);
           } else {
+            if (!updatedPlayer.education.examsPassed.includes('NEET')) {
+              updatedPlayer.education.examsPassed.push('NEET');
+            }
             setTimeout(() => get().unlockAchievement('AIIMSGrad'), 100);
             setTimeout(() => get().unlockAchievement('KotaSurvivor'), 150);
           }
         } else {
           // Failed
-          updatedPlayer.education.stage = 'Finished';
-          updatedPlayer.biography.push(`❌ You failed to clear the cut-off for elite colleges (Score: ${score.toFixed(0)}). You had to settle for a local private college.`);
+          const degree = trig === 'solveJEENormal' ? 'Local BTech Engineering' : 'Local MBBS Medicine';
+          updatedPlayer.education.stage = 'College';
+          updatedPlayer.education.currentDegree = degree;
+          updatedPlayer.biography.push(`❌ You failed to clear the cut-off for elite colleges (Score: ${score.toFixed(0)}). You settled for a local private college to study ${trig === 'solveJEENormal' ? 'Engineering' : 'Medicine'}.`);
           updatedPlayer.stats.happiness = Math.max(0, updatedPlayer.stats.happiness - 20);
         }
-      } else if (trig === 'solveUPSCNormal') {
+      } else if (trig === 'solveNDANormal' || trig === 'solveNDAFitness') {
+        const effort = updatedPlayer.education.studyEffort;
+        const intel = updatedPlayer.stats.intelligence;
+        const fitness = updatedPlayer.stats.fitness;
+        const isAthletic = updatedPlayer.traits.includes('Athletic');
+        const isDisciplined = updatedPlayer.traits.includes('Disciplined');
+        const hasNDAPrep = updatedPlayer.education.prepCoaching === 'NDA Prep';
+
+        let score = (intel * 0.3) + (fitness * 0.4) + (effort * 0.2) + (hasNDAPrep ? 25 : 0) + (isAthletic ? 10 : 0) + (isDisciplined ? 10 : 0) + randomRange(-10, 10);
+        if (trig === 'solveNDAFitness') {
+          score = (fitness * 0.6) + (intel * 0.1) + (isAthletic ? 20 : 0) + randomRange(-15, 10);
+        }
+
+        if (!updatedPlayer.education.examsPassed) {
+          updatedPlayer.education.examsPassed = [];
+        }
+
+        if (score >= 65) {
+          if (!updatedPlayer.education.examsPassed.includes('NDA')) {
+            updatedPlayer.education.examsPassed.push('NDA');
+          }
+          updatedPlayer.biography.push(`⚔️ NDA Result: Passed! You cracked the NDA written exam and cleared the SSB interview with score ${score.toFixed(0)}/100! You are now eligible to join the Army as an Officer.`);
+          updatedPlayer.stats.happiness = Math.min(100, updatedPlayer.stats.happiness + 20);
+          updatedPlayer.stats.fitness = Math.min(100, updatedPlayer.stats.fitness + 15);
+          updatedPlayer.stats.reputation = Math.min(100, updatedPlayer.stats.reputation + 15);
+        } else {
+          updatedPlayer.biography.push(`❌ NDA Result: Failed. Score: ${score.toFixed(0)}/100. The competition was brutal and you didn't make the SSB/written cut-off.`);
+          updatedPlayer.stats.happiness = Math.max(0, updatedPlayer.stats.happiness - 15);
+        }
+      } else if (trig === 'solveUPSCNormal' || trig === 'solveUPSCRisk') {
         const effort = updatedPlayer.education.studyEffort;
         const intel = updatedPlayer.stats.intelligence;
         const hasUPSCPrep = updatedPlayer.education.prepCoaching === 'UPSC Prep';
         const isGenius = updatedPlayer.traits.includes('Genius');
 
-        const score = (intel * 0.5) + (effort * 0.2) + (hasUPSCPrep ? 25 : 0) + (isGenius ? 15 : 0) + randomRange(-15, 15);
+        let score = (intel * 0.5) + (effort * 0.2) + (hasUPSCPrep ? 25 : 0) + (isGenius ? 15 : 0) + randomRange(-15, 15);
+        if (trig === 'solveUPSCRisk') {
+          score = (intel * 0.4) + (effort * 0.1) + (hasUPSCPrep ? 20 : 0) + randomRange(-35, 30);
+        }
+
+        if (!updatedPlayer.education.examsPassed) {
+          updatedPlayer.education.examsPassed = [];
+        }
+
         if (score >= 80) {
-          updatedPlayer.biography.push('🦁 UPSC CSE Result: Selected! You cleared all three rounds of Civil Services Exam on your first try! You are now an IAS/IPS ranker.');
+          updatedPlayer.biography.push(`🦁 UPSC CSE Result: Selected! You cleared all three rounds of Civil Services Exam on your first try with score ${score.toFixed(0)}! You are now an IAS/IPS ranker.`);
           updatedPlayer.stats.reputation = 100;
           updatedPlayer.stats.happiness = 100;
-          // Unlocks civil service careers
           updatedPlayer.education.prepCoaching = 'None';
           
+          if (!updatedPlayer.education.examsPassed.includes('UPSC')) {
+            updatedPlayer.education.examsPassed.push('UPSC');
+          }
+
           // Allocate civil services job options
           const roll = Math.random() > 0.5 ? 'IAS' : 'IPS';
           const p = roll === 'IAS' ? CAREER_PATHS.IASOfficer : CAREER_PATHS.IPSOfficer;
@@ -761,20 +831,55 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const boardScore = Math.min(100, Math.round((intel * 0.5) + (effort * 0.4) + randomRange(1, 10)));
       updatedPlayer.biography.push(`📝 Class 12 CBSE Board Results: You scored ${boardScore}%!`);
       
-      if (stream === 'Science' && updatedPlayer.education.prepCoaching === 'JEE Prep') {
-        set({ player: updatedPlayer });
-        set({ activeEvent: COMPETITIVE_EXAM_EVENTS.JEE });
-        return;
-      } else if (stream === 'Science' && updatedPlayer.education.prepCoaching === 'NEET Prep') {
-        set({ player: updatedPlayer });
-        set({ activeEvent: COMPETITIVE_EXAM_EVENTS.NEET });
-        return;
-      } else {
-        // Normal university entry
-        updatedPlayer.education.stage = 'College';
-        updatedPlayer.education.currentDegree = stream === 'Commerce' ? 'BCom Finance' : stream === 'Arts' ? 'BA History' : 'BSc General';
-        updatedPlayer.biography.push(`🎓 Enrolled in Delhi University for ${updatedPlayer.education.currentDegree}.`);
+      // Trigger Class 12 Competitive Exam Selection Event
+      set({ player: updatedPlayer });
+
+      const options: ChoiceOption[] = [];
+      if (stream === 'Science') {
+        options.push({
+          text: 'Register & Sit for IIT JEE Exam (Engineering)',
+          effects: {
+            logText: 'Decided to write the IIT JEE entrance exam.',
+            customTrigger: 'triggerJEE'
+          }
+        });
+        options.push({
+          text: 'Register & Sit for NEET Medical Exam (Medicine)',
+          effects: {
+            logText: 'Decided to write the NEET medical entrance exam.',
+            customTrigger: 'triggerNEET'
+          }
+        });
       }
+      options.push({
+        text: 'Register & Sit for NDA Exam (National Defence Academy)',
+        effects: {
+          logText: 'Decided to write the NDA defence entrance exam.',
+          customTrigger: 'triggerNDA'
+        }
+      });
+      options.push({
+        text: stream === 'Commerce' 
+          ? 'Opt for Direct College Admission (BCom Finance)'
+          : stream === 'Arts'
+            ? 'Opt for Direct College Admission (BA History)'
+            : 'Opt for Direct College Admission (BSc General)',
+        effects: {
+          logText: 'Skipped competitive entrance exams and opted for direct university admission.',
+          customTrigger: 'skipExamsDirectAdmission'
+        }
+      });
+
+      set({
+        activeEvent: {
+          id: 'class_12_exam_choice',
+          title: 'Class 12 Completed: Choose Your Pathway',
+          description: `You scored ${boardScore}% in your Class 12 Board Exams! Your parents are asking what you plan to do next. Select a competitive entrance exam to sit for, or choose direct college admission.`,
+          emoji: '🎓',
+          options
+        }
+      });
+      return;
     } else if (currentAge === 21 && updatedPlayer.education.stage === 'College') {
       updatedPlayer.education.stage = 'Finished';
       updatedPlayer.biography.push(`🎓 Graduated from university with your degree in ${updatedPlayer.education.currentDegree}. Time to look for a job!`);
@@ -1034,6 +1139,38 @@ export const useGameStore = create<GameStore>((set, get) => ({
     localStorage.setItem('bitlife_india_save', JSON.stringify(updated));
   },
 
+  takeCompetitiveExam: (type) => {
+    const { player } = get();
+    if (!player) return;
+
+    let fee = 2000;
+    if (type === 'NDA') fee = 1000;
+    if (type === 'UPSC') fee = 5000;
+
+    if (player.stats.money < fee) {
+      set({
+        activeEvent: {
+          id: 'exam_insufficient_funds',
+          title: 'Cannot Afford Exam Fee',
+          description: `Writing the ${type} exam requires a registration fee of ${formatCurrency(fee)}. You don't have enough money.`,
+          emoji: '❌',
+          options: [{ text: 'Bummer', effects: { logText: 'Could not afford the exam registration fees.' } }]
+        }
+      });
+      return;
+    }
+
+    const updated = { ...player };
+    updated.stats.money -= fee;
+    updated.biography.push(`📝 Registered for the ${type} competitive exam. Paid fee of ${formatCurrency(fee)}.`);
+    
+    set({ player: updated });
+
+    setTimeout(() => {
+      set({ activeEvent: COMPETITIVE_EXAM_EVENTS[type] });
+    }, 100);
+  },
+
   applyJob: (pathKey) => {
     const { player } = get();
     if (!player) return false;
@@ -1065,9 +1202,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
     }
     if (req.examsPassed && req.examsPassed.length > 0) {
-      // Checked separately
-      eligible = false;
-      reason = 'Must clear specific competitive entrance exam first.';
+      const examsPassed = player.education.examsPassed || [];
+      const hasPassedAll = req.examsPassed.every(exam => examsPassed.includes(exam));
+      if (!hasPassedAll) {
+        eligible = false;
+        reason = `Must clear specific competitive entrance exam first (${req.examsPassed.join(', ')}).`;
+      }
     }
     if (req.intelligence && player.stats.intelligence < req.intelligence) {
       eligible = false;

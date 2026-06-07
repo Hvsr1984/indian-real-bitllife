@@ -183,6 +183,7 @@ export interface Player {
     prepCoaching?: 'None' | 'JEE Prep' | 'NEET Prep' | 'UPSC Prep' | 'NDA Prep' | 'CAT Prep' | 'CA Prep';
     studyEffort: number; // 0 - 100
     scholarship: boolean;
+    examsPassed?: string[];
   };
   career: CareerState;
   relationships: Relationship[];

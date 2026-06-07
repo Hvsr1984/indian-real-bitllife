@@ -146,6 +146,22 @@ export const COMPETITIVE_EXAM_EVENTS: Record<string, ChoiceEvent> = {
       }
     ]
   },
+  NDA: {
+    id: 'nda_exam_day',
+    title: 'NDA Entrance Exam Day',
+    description: 'The National Defence Academy entrance exam is here. It tests Mathematics, General Ability, and physical fitness standards. You are sitting at the exam center.',
+    emoji: '⚔️',
+    options: [
+      {
+        text: 'Attempt with discipline and determination',
+        effects: { customTrigger: 'solveNDANormal', logText: 'You wrote the NDA exam with discipline.' }
+      },
+      {
+        text: 'Guess the answers and focus on the fitness test',
+        effects: { customTrigger: 'solveNDAFitness', logText: 'You relied on your fitness and guessed the questions.' }
+      }
+    ]
+  },
   UPSC: {
     id: 'upsc_exam_day',
     title: 'UPSC Civil Services Prelims',

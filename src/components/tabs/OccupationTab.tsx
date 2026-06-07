@@ -15,6 +15,7 @@ export const OccupationTab: React.FC = () => {
   const bollywoodAudition = useGameStore((state) => state.bollywoodAudition);
   const releaseBollywoodMovie = useGameStore((state) => state.releaseBollywoodMovie);
   const politicalCampaign = useGameStore((state) => state.politicalCampaign);
+  const takeCompetitiveExam = useGameStore((state) => state.takeCompetitiveExam);
 
   const [campaignAmount, setCampaignAmount] = useState<number>(500000);
 
@@ -27,6 +28,70 @@ export const OccupationTab: React.FC = () => {
     if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
     if (val >= 100000) return `₹${(val / 100000).toFixed(2)} L`;
     return `₹${val.toLocaleString('en-IN')}`;
+  };
+
+  // Competitive exams checker and renderer
+  const eligibleExams = (() => {
+    const exams = [];
+    const examsPassed = education.examsPassed || [];
+    
+    // JEE & NEET: Science stream, age 17-21, has not passed JEE/NEET yet
+    const hasPassedJEE = examsPassed.includes('JEE');
+    const hasPassedNEET = examsPassed.includes('NEET');
+    if (education.stream === 'Science' && age >= 17 && age <= 21) {
+      if (!hasPassedJEE) {
+        exams.push({ type: 'JEE', name: 'IIT JEE (Engineering)', fee: 2000, desc: 'Entrance for premium engineering institutes (IITs).' });
+      }
+      if (!hasPassedNEET) {
+        exams.push({ type: 'NEET', name: 'NEET (Medical)', fee: 2000, desc: 'Entrance for premier medical colleges (AIIMS).' });
+      }
+    }
+    
+    // NDA: Age 17-21, has not passed NDA yet
+    const hasPassedNDA = examsPassed.includes('NDA');
+    if (age >= 17 && age <= 21 && !hasPassedNDA) {
+      exams.push({ type: 'NDA', name: 'NDA (Defence Services)', fee: 1000, desc: 'Entrance for National Defence Academy officers.' });
+    }
+    
+    // UPSC: Age >= 21, has completed or is in college, has not passed UPSC yet
+    const hasPassedUPSC = examsPassed.includes('UPSC');
+    const hasCollegeDegree = education.stage === 'College' || education.stage === 'Finished';
+    if (age >= 21 && hasCollegeDegree && !hasPassedUPSC) {
+      exams.push({ type: 'UPSC', name: 'UPSC Civil Services', fee: 5000, desc: 'Entrance for administrative civil services (IAS/IPS).' });
+    }
+    
+    return exams;
+  })();
+
+  const renderCompetitiveExams = () => {
+    if (eligibleExams.length === 0) return null;
+    return (
+      <div className="glass-card p-5 border border-luxury-border flex flex-col gap-4">
+        <h4 className="text-sm font-bold text-gray-200 uppercase tracking-wider flex items-center gap-1.5">
+          📝 Competitive Entrance Exams
+        </h4>
+        <p className="text-xs text-gray-400">
+          Register and write competitive national exams to qualify for prestigious university degrees or elite public service roles.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {eligibleExams.map((exam) => (
+            <div key={exam.type} className="bg-luxury-panel border border-luxury-border p-4 rounded-xl flex flex-col justify-between gap-3 hover:border-luxury-goldBorder transition">
+              <div>
+                <h5 className="text-xs font-bold text-gray-200">{exam.name}</h5>
+                <p className="text-[10px] text-gray-400 mt-1">{exam.desc}</p>
+                <p className="text-[10px] text-yellow-500 font-semibold mt-1">Fee: {formatMoney(exam.fee)}</p>
+              </div>
+              <button
+                onClick={() => takeCompetitiveExam(exam.type as any)}
+                className="btn-gold py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider w-full"
+              >
+                Register & Write Exam
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   // If toddler
@@ -126,6 +191,7 @@ export const OccupationTab: React.FC = () => {
             </div>
           )}
         </div>
+        {renderCompetitiveExams()}
       </div>
     );
   }
@@ -171,6 +237,7 @@ export const OccupationTab: React.FC = () => {
             ❌ Resign from Job
           </button>
         </div>
+        {renderCompetitiveExams()}
       </div>
     );
   }
@@ -407,6 +474,8 @@ export const OccupationTab: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {renderCompetitiveExams()}
 
       {/* Corporate Listings */}
       <div className="flex flex-col gap-3">

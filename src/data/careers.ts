@@ -29,7 +29,7 @@ export const CAREER_PATHS: Record<string, CareerPath> = {
     category: 'Job',
     description: 'Build apps and write code in IT parks. Classic Bangalore dream.',
     entryRequirements: {
-      education: ['Engineering College', 'Foreign University'],
+      education: ['IIT BTech Engineering', 'Local BTech Engineering', 'BSc General', 'Engineering College', 'Foreign University'],
       intelligence: 60
     },
     levels: [
@@ -45,7 +45,7 @@ export const CAREER_PATHS: Record<string, CareerPath> = {
     category: 'Job',
     description: 'Save lives, work long hours, and open private clinics.',
     entryRequirements: {
-      education: ['Medical College'],
+      education: ['AIIMS MBBS Medicine', 'Local MBBS Medicine', 'Medical College'],
       intelligence: 75
     },
     levels: [
@@ -107,7 +107,7 @@ export const CAREER_PATHS: Record<string, CareerPath> = {
     category: 'Job',
     description: 'Argue in courts, handle high-profile lawsuits, and aim for the Supreme Court bar.',
     entryRequirements: {
-      education: ['Engineering College', 'Medical College', 'Foreign University', 'Government School', 'Private School'], // Any, but CAT/CLAT/CA is relevant
+      education: ['IIT BTech Engineering', 'Local BTech Engineering', 'AIIMS MBBS Medicine', 'Local MBBS Medicine', 'BCom Finance', 'BA History', 'BSc General', 'Engineering College', 'Medical College', 'Foreign University', 'Government School', 'Private School'], // Any degree or school
       intelligence: 65
     },
     levels: [
